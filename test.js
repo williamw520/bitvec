@@ -1,5 +1,5 @@
-const test = require("ava");
 
+import test from "ava";
 import {BitVec} from "./bitvec.js";
 
 
@@ -182,7 +182,7 @@ test("randomize", t => {
     for (let i = 0; i < 32; i++)
         sum += b1.get(i);
     t.is(sum > 0, true);
-    console.log("32 bits: " + b1.toString());
+    //console.log("32 bits: " + b1.toString());
 
     b1 = new BitVec(100);
     b1.randomize();
@@ -618,13 +618,13 @@ test("ofBinary", t=> {
 
 test("bitOn out of bound", t => {
     let b1 = new BitVec(32);
-    t.throws( () => { b1.bitOn(32) }, "Bit index is out of bound" );
-    t.throws( () => { b1.bitOn(-1) }, "Bit index is out of bound" );
-    t.throws( () => { b1.bitOn(39) }, "Bit index is out of bound" );
+    t.throws( () => { b1.bitOn(32) }, null, "Bit index is out of bound" );
+    t.throws( () => { b1.bitOn(-1) }, null, "Bit index is out of bound" );
+    t.throws( () => { b1.bitOn(39) }, null, "Bit index is out of bound" );
 
     b1 = new BitVec(100);
-    t.throws( () => { b1.bitOn(100) }, "Bit index is out of bound" );
-    t.throws( () => { b1.bitOn(-1)  }, "Bit index is out of bound" );
-    t.throws( () => { b1.bitOn(900) }, "Bit index is out of bound" );
+    t.throws( () => { b1.bitOn(100) }, null, "Bit index is out of bound" );
+    t.throws( () => { b1.bitOn(-1)  }, null, "Bit index is out of bound" );
+    t.throws( () => { b1.bitOn(900) }, null, "Bit index is out of bound" );
 });
 
