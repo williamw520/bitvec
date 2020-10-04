@@ -1,0 +1,36 @@
+{
+    "name": "BitVec",
+    "title": "BitVec",
+    "version": "0.0.1",
+    "description": "A high performance JavaScript bit vector class.",
+    "keywords": [
+        "bits",
+        "vec",
+        "vector",
+        "set",
+        "bit vec",
+        "bit vector",
+        "bit array",
+        "bit set",
+        "bit map",
+        "bitvec",
+        "bitvector",
+        "bitarray",
+        "bitset",
+        "bitmap"
+    ],
+    "author": "William Wong <williamw520@gmail.com>",
+    "main": "bitvec",
+    "private": false,
+    "readmeFilename": "README.md",
+    "license": "MIT",
+    "scripts": {
+        "test": "ava"
+    },
+    "devDependencies": {
+        "ava": "^1.0.0",
+        "gulp": "^4.0.2",
+        "gulp-rename": "^2.0.0",
+        "gulp-uglify-es": "^2.0.0"
+    }
+}
