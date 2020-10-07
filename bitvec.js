@@ -5,16 +5,15 @@
   williamw520@gmail.com
 */
 
-// Word and bit size defines.
+// Local defines for word bit info.
 const WORD_ADDRESS_BITS = 5;                            // 32-bit word needs 5 bits for addressing.
 const BITS_PER_WORD     = 1 << WORD_ADDRESS_BITS;       // 32 bits per word
-const BIT_INDEX_MASK    = BITS_PER_WORD - 1;            // and-mask to get the lower 32 bits.
 const BITMASK32         = 0xFFFFFFFF;
 
 // Local util functions.
 const wordIdx           = (bitIndex) => bitIndex >>> WORD_ADDRESS_BITS;
 const wordsOfBits       = (nbits) => wordIdx(nbits - 1) + 1;
-const rand32            = () => Math.random() * 0xFFFFFFFF;
+const rand32            = (rng) => (rng || Math.random)() * 0xFFFFFFFF;     // use a custom random-number-generator; default to Math.random().
 const bitCount          = (word32) => {
     // Henry Warren's pop-count.
     word32 -= ((word32 >>> 1) & 0x55555555);
@@ -35,6 +34,12 @@ export class BitVec {
         this.words = new Uint32Array(wordsOfBits(numberOfBits));
     }
 
+    clone() {
+        let b = new BitVec(this.nbits);
+        b.words = this.words.slice();
+        return b;
+    }
+
     bitOn(bitIndex)     { this._bounded(bitIndex);  this._wordOr( wordIdx(bitIndex), 1 << bitIndex)             }
     bitOff(bitIndex)    { this._bounded(bitIndex);  this._wordAnd(wordIdx(bitIndex), 1 << bitIndex)             }
     flip(bitIndex)      { this._bounded(bitIndex);  this._wordXor(wordIdx(bitIndex), 1 << bitIndex)             }
@@ -45,33 +50,35 @@ export class BitVec {
     cardinality()       { return this.words.reduce( (sum, w) => (sum += bitCount(w), sum), 0 )                  }
     clear()             { this.words.forEach( (_, i) => this.words[i] = 0 )                                     }
     setAll()            { this.words.forEach( (_, i) => this.words[i] = BITMASK32 ); this._trimMsbs();          }
-    randomize()         { this.words.forEach( (_, i) => this.words[i] = rand32() );  this._trimMsbs();          }
+    randomize(rng)      { this.words.forEach( (_, i) => this.words[i] = rand32(rng) );  this._trimMsbs();       }
     rangeOn(from, to)   { this._rangeOp(from, to, this._wordOr.bind(this))                                      }
     rangeOff(from, to)  { this._rangeOp(from, to, this._wordAnd.bind(this))                                     }
     rangeFlip(from, to) { this._rangeOp(from, to, this._wordXor.bind(this))                                     }
 
     nextOn(fromBitIndex) {
+        if (fromBitIndex >= this.nbits)
+            return -1;
         let widx = wordIdx(fromBitIndex);
         let word = this.words[widx] & (BITMASK32 << fromBitIndex);
         while (true) {
             if (word != 0)
                 return (widx * BITS_PER_WORD) + trailing0s(word);
-            if (++widx == this._wordCount())
+            if (++widx == this.wordCount)
                 return -1;
             word = this.words[widx];
         }
     }
 
     nextOff(fromBitIndex) {
+        if (fromBitIndex >= this.nbits)
+            return -1;
         let widx = wordIdx(fromBitIndex);
-        if (widx >= this._wordCount())
-            return fromBitIndex;
         let word = (~this.words[widx]) & (BITMASK32 << fromBitIndex);
         while (true) {
             if (word != 0)
                 return (widx * BITS_PER_WORD) + trailing0s(word);
-            if (++widx == this._wordCount())
-                return this._wordCount() * BITS_PER_WORD;
+            if (++widx == this.wordCount)
+                return -1;
             word = ~this.words[widx];
         }
     }
@@ -80,12 +87,80 @@ export class BitVec {
         for (let i = 0; i < this.nbits; i++)
             cb(this.get(i), i);
     }
-    
+
     iterMsb(cb) {
         for (let i = this.nbits - 1; i >= 0; i--)
             cb(this.get(i), i);
     }
-    
+
+    not() {
+        this.rangeFlip(0, this.nbits);
+    }
+
+    and(b) {
+        if (this == b)
+            return;
+        for (let k = this.wordCount; k >= b.wordCount; k--)
+            this.words[k] = 0;                                  // set the excessive bits to 0 since and'ing with the missing bits is 0.
+        for (let k = 0; k < this.wordCount; k++)
+            this.words[k] &= b.words[k];                        // and'ing the common prefix bits.
+    }
+
+    or(b) {
+        if (this == b)
+            return;
+        let common = Math.min(this.wordCount, b.wordCount);     // get the common prefix word length before increasing any capacity.
+        this._ensureCap(b.nbits);
+        for (let k = 0; k < common; k++)
+            this.words[k] |= b.words[k];                        // or'ing the common prefix bits.
+        if (common < this.wordCount) {
+            this.words.set(b.words.slice(common), common);      // copy the remaining words
+            this._cleanseLast();
+        }
+    }
+
+    xor(b) {
+        if (this == b)
+            return;
+        let common = Math.min(this.wordCount, b.wordCount);     // get the common prefix word length before increasing any capacity.
+        this._ensureCap(b.nbits);
+        for (let k = 0; k < common; k++)
+            this.words[k] ^= b.words[k];                        // xor'ing the common prefix bits.
+        if (common < this.wordCount) {
+            this.words.set(b.words.slice(common), common);      // copy the remaining words
+            this._cleanseLast();
+        }
+    }
+
+    // Clears the bits of this bit vector where the corresponding bit is set in the parameter bit vector b.
+    andNot(b) {
+        // Apply logical (a & !b) on words in common.
+        let common = Math.min(this.wordCount, b.wordCount);
+        for (let k = common - 1; k >= 0; k--)
+            this.words[k] &= ~b.words[k];
+    }
+
+    equals(b) {
+        if (this == b)
+            return true;
+
+        if (this.nbits != b.nbits)
+            return false;
+
+        let lastWordIndex = this.wordCount - 1;
+        for (let k = 0; k < lastWordIndex; k++) {
+            if (this.words[k] != b.words[k])
+                return false;
+        }
+        if (lastWordIndex >= 0) {
+            let lastWMask = BITMASK32 >>> -this.nbits;
+            if ((this.words[lastWordIndex] & lastWMask) != (b.words[lastWordIndex] & lastWMask))
+                return false;
+        }
+
+        return true;
+    }
+
     _rangeOp(fromBitIndex, toBitIndex, wordMaskFn) {
         this._bounded2(fromBitIndex);
         this._bounded2(toBitIndex);
@@ -114,27 +189,23 @@ export class BitVec {
         }
     }
 
-    equals(b) {
-        if (this == b)
-            return true;
-
-        if (this.nbits != b.nbits)
-            return false;
-
-        let lastWordIndex = this._wordCount() - 1;
-        for (let k = 0; k < lastWordIndex; k++) {
-            if (this.words[k] != b.words[k])
-                return false;
+    resize(nbits) {
+        if (this.nbits == nbits) {
+            return;
+        } else if (this.nbits < nbits) {
+            // Expand to the bigger number of bits.
+            let original = this.words;
+            this.nbits = nbits;
+            this.words = new Uint32Array(wordsOfBits(nbits));
+            this.words.set(original, 0);
+        } else {
+            // Shrink to the smaller number of bits.
+            this.nbits = nbits;
+            this.words = this.words.slice(0, wordsOfBits(nbits));
+            this._cleanseLast();
         }
-        if (lastWordIndex >= 0) {
-            let lastWMask = BITMASK32 >>> -this.nbits;
-            if ((this.words[lastWordIndex] & lastWMask) != (b.words[lastWordIndex] & lastWMask))
-                return false;
-        }
-
-        return true;
     }
-    
+
     toString() {
         return this.asBinary();
     }
@@ -178,8 +249,8 @@ export class BitVec {
         return bvec;
     }
 
-    _wordCount()            { return this.words.length                      }
-    _wordBits()             { return this._wordCount() * BITS_PER_WORD      }
+    get wordCount()         { return this.words.length                      }
+    _wordBits()             { return this.wordCount * BITS_PER_WORD         }
     _trimMsbs()             { this.rangeOff(this.nbits, this._wordBits())   }
     _wordOr(widx, mask)     { this.words[widx] |= mask                      }
     _wordAnd(widx, mask)    { this.words[widx] &= ~mask                     }
@@ -187,5 +258,16 @@ export class BitVec {
     _bounded(bitIndex)      { if (bitIndex < 0 || bitIndex >= this.nbits)       throw Error("Bit index is out of bound")    }
     _bounded2(bitIndex)     { if (bitIndex < 0 || bitIndex >  this._wordBits()) throw Error("Bit index is out of bound")    }
 
+    _ensureCap(nbits) {
+        if (this.nbits < nbits)
+            this.resize(nbits);
+    }
+
+    _cleanseLast() {
+        let lastWidx    = wordIdx(this.nbits - 1);
+        let lastWMask   = BITMASK32 >>> -this.nbits;
+        this._wordAnd(lastWidx, ~lastWMask);                    // clear bits beyond the last bit in the last word.
+    }        
+    
 }
 

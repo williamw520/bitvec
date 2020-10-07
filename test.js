@@ -1,5 +1,6 @@
 
 import test from "ava";
+import seedrandom from "seedrandom";
 import {BitVec} from "./bitvec.js";
 
 
@@ -516,6 +517,117 @@ test("equals", t => {
 
 });
 
+test("not", t => {
+    let b1 = new BitVec(100);
+    let b2 = new BitVec(100);
+
+    b1.bitOn(0);
+    b1.bitOn(1);
+    b1.not();
+    t.is(b1.isOn(0), false);
+    t.is(b1.isOn(1), false);
+    for (let i = 2; i < 100; i++)
+        t.is(b1.isOn(i), true);
+
+    b1.randomize(new seedrandom("test123"));
+    b2.randomize(new seedrandom("test123"));        // generate the same random bits with the same seed
+    b1.not(b2);
+    b1.and(b2);
+    for (let i = 0; i < 100; i++)
+        t.is(b1.isOn(i), false);
+});
+
+test("and", t => {
+    let b1 = new BitVec(100);
+    let b2 = new BitVec(100);
+
+    b1.bitOn(0);
+    b1.bitOn(1);
+    b2.bitOn(0);
+    b1.and(b2);
+    t.is(b1.isOn(0), true);
+    for (let i = 1; i < 100; i++)
+        t.is(b1.isOn(i), false);
+
+    b1.randomize(new seedrandom("test123"));
+    b2.randomize(new seedrandom("test123"));        // generate the same random bits with the same seed
+    b1.not(b2);
+    b1.and(b2);
+    for (let i = 0; i < 100; i++)
+        t.is(b1.isOn(i), false);
+});
+
+test("or", t => {
+    let b1 = new BitVec(100);
+    let b2 = new BitVec(100);
+
+    b1.bitOn(0);
+    b1.bitOn(1);
+    b2.bitOn(0);
+    b1.or(b2);
+    t.is(b1.isOn(0), true);
+    t.is(b1.isOn(1), true);
+    for (let i = 2; i < 100; i++)
+        t.is(b1.isOn(i), false);
+
+    b1.randomize(new seedrandom("test123"));
+    b2.randomize(new seedrandom("test123"));        // generate the same random bits with the same seed
+    b1.not(b2);
+    b1.or(b2);
+    for (let i = 0; i < 100; i++)
+        t.is(b1.isOn(i), true);
+});
+
+test("xor", t => {
+    let b1 = new BitVec(100);
+    let b2 = new BitVec(100);
+
+    b1.bitOn(0);
+    b1.bitOn(1);
+    b1.bitOn(2);
+    b2.bitOn(0);
+    b2.bitOn(2);
+    b2.bitOn(3);
+    b1.xor(b2);
+    t.is(b1.isOn(0), false);
+    t.is(b1.isOn(1), true);
+    t.is(b1.isOn(2), false);
+    t.is(b1.isOn(3), true);
+    for (let i = 4; i < 100; i++)
+        t.is(b1.isOn(i), false);
+
+    b1.randomize(new seedrandom("test123"));
+    b2.randomize(new seedrandom("test123"));        // generate the same random bits with the same seed
+    b1.xor(b2);
+    for (let i = 0; i < 100; i++)
+        t.is(b1.isOn(i), false);
+});
+
+test("andNot", t => {
+    let b1 = new BitVec(100);
+    let b2 = new BitVec(100);
+
+    b1.bitOn(0);
+    b1.bitOn(1);
+    b2.bitOn(2);
+    b2.bitOn(0);
+    b2.bitOn(2);
+    b2.bitOn(3);
+    b1.andNot(b2);
+    t.is(b1.isOn(0), false);
+    t.is(b1.isOn(1), true);
+    t.is(b1.isOn(2), false);
+    t.is(b1.isOn(3), false);
+    for (let i = 4; i < 100; i++)
+        t.is(b1.isOn(i), false);
+
+    b1.randomize(new seedrandom("test123"));
+    b2.randomize(new seedrandom("test123"));        // generate the same random bits with the same seed
+    b1.andNot(b2);
+    for (let i = 0; i < 100; i++)
+        t.is(b1.isOn(i), false);
+});
+
 test("asHex", t=> {
     let b1 = new BitVec(32);
     t.is(b1.asHex(), "00000000");
@@ -615,6 +727,53 @@ test("ofBinary", t=> {
     b1 = new BitVec(33);
     t.is(new BitVec(33).equals(BitVec.ofBinary(b1.asBinary())), true);
 });
+
+test("clone", t => {
+    let b1 = new BitVec(32);
+    let b2 = b1.clone();
+    t.is(b1.equals(b2), true);
+
+    b1 = new BitVec(100);
+    b2 = b1.clone();
+    t.is(b1.equals(b2), true);
+});
+
+test("resize", t => {
+    let b1 = new BitVec(32);
+    b1.bitOn(0);
+    b1.bitOn(3);
+    b1.bitOn(31);
+    b1.resize(2);
+    t.is(b1.isOn(0), true);
+    t.is(b1.isOn(1), false);
+    t.is(b1.nbits, 2);
+
+    b1.resize(5);
+    t.is(b1.isOn(0), true);
+    t.is(b1.isOn(1), false);
+    t.is(b1.isOn(2), false);
+    t.is(b1.isOn(3), false);
+    t.is(b1.isOn(4), false);
+    t.is(b1.nbits, 5);
+
+    b1.resize(33);
+    t.is(b1.isOn(0), true);
+    for (let i = 1; i < 33; i++)
+        t.is(b1.isOn(i), false);
+    t.is(b1.nbits, 33);
+    b1.bitOn(32);
+    t.is(b1.isOn(32), true);
+
+    b1.resize(5);
+    t.is(b1.isOn(0), true);
+    t.is(b1.isOn(1), false);
+    t.is(b1.isOn(2), false);
+    t.is(b1.isOn(3), false);
+    t.is(b1.isOn(4), false);
+    t.is(b1.nbits, 5);
+
+});
+
 
 test("bitOn out of bound", t => {
     let b1 = new BitVec(32);

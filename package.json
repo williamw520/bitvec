@@ -36,7 +36,8 @@
         "gulp": "^4.0.2",
         "gulp-rename": "^2.0.0",
         "gulp-uglify-es": "^2.0.0",
-        "microtime": "^3.0.0"
+        "microtime": "^3.0.0",
+        "seedrandom": "^3.0.5"
     },
     "ava": {
         "require": [
