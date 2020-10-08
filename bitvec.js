@@ -55,6 +55,16 @@ export class BitVec {
     rangeOff(from, to)  { this._rangeOp(from, to, this._wordAnd.bind(this))                                     }
     rangeFlip(from, to) { this._rangeOp(from, to, this._wordXor.bind(this))                                     }
 
+    slice(fromBitIndex, toBitIndex) {
+        fromBitIndex = fromBitIndex || 0;
+        toBitIndex   = toBitIndex || this.nbits;
+        let bv = new BitVec(toBitIndex - fromBitIndex);
+        for (let i = fromBitIndex, j = 0; i < toBitIndex; i++, j++) {
+            bv.set(j, this.get(i));
+        }
+        return bv;
+    }
+
     nextOn(fromBitIndex) {
         if (fromBitIndex >= this.nbits)
             return -1;

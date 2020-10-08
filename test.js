@@ -677,6 +677,42 @@ test("lshift", t => {
     
 });
 
+test("slice", t => {
+    let b1 = new BitVec(100);
+    let b2;
+
+    b1.rangeOn(90, 99);
+    b2 = b1.slice(0, 7);
+    t.is(b2.nbits, 7);
+    for (let i = 0; i < 7; i++)
+        t.is(b2.isOn(i), false);
+    b2 = b1.slice(60, 100);
+    t.is(b2.nbits, 40);
+    for (let i = 0; i < 90-60; i++)
+        t.is(b2.isOn(i), false);
+    for (let i = 90-60; i < 90-60 + 99-90; i++)
+        t.is(b2.isOn(i), true);
+    t.is(b2.isOn(39), false);
+});
+
+test("slice", t => {
+    let b1 = new BitVec(100);
+    let b2;
+
+    b1.rangeOn(90, 99);
+    b2 = b1.slice(0, 7);
+    t.is(b2.nbits, 7);
+    for (let i = 0; i < 7; i++)
+        t.is(b2.isOn(i), false);
+    b2 = b1.slice(60, 100);
+    t.is(b2.nbits, 40);
+    for (let i = 0; i < 90-60; i++)
+        t.is(b2.isOn(i), false);
+    for (let i = 90-60; i < 90-60 + 99-90; i++)
+        t.is(b2.isOn(i), true);
+    t.is(b2.isOn(39), false);
+});
+
 test("asHex", t=> {
     let b1 = new BitVec(32);
     t.is(b1.asHex(), "00000000");
