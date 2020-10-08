@@ -8,7 +8,7 @@ import {BitVec} from "./bitvec.js";
 function logtime(tag, mt1, mt2, nbits, iteration) {
     let elapse = mt2 - mt1;
     let rate = Math.floor( iteration / (elapse || 1) * 1000000 );
-    let msg = (tag + " - ").padEnd(25, " ") +
+    let msg = (tag + " - ").padEnd(26, " ") +
         "bits: " + (nbits.toLocaleString() + "; ").padEnd(11, " ") +
         "pass: " + (iteration.toLocaleString() + "; ").padEnd(13, " ") +
         "time: " + elapse.toLocaleString() + "us; " +
@@ -228,7 +228,24 @@ test("benchmark", t => {
     }
     logtime("nextOn search loop", mt1, microtime.now(), nbits, iteration);
 
-    
+
+    iteration = 10000;
+    nbits = 10000;
+    bn = new BitVec(nbits);
+    bn.randomize(new seedrandom("test123"));
+    mt1 = microtime.now();
+    for (let i = 0; i < iteration; i++) {
+        let from = 0, found = 0;
+        while (true) {
+            if ((found = bn.nextOn(from)) < 0)
+                break;
+//            t.is(bn.isOn(found), true);
+            from = found + 1;
+        }
+    }
+    logtime("nextOn search loop 2", mt1, microtime.now(), nbits, iteration);
+
+
     iteration = 1000;
     nbits = 100000;
     bn = new BitVec(nbits);
@@ -244,6 +261,22 @@ test("benchmark", t => {
         }
     }
     logtime("nextOff search loop", mt1, microtime.now(), nbits, iteration);
+
+
+    iteration = 10000;
+    nbits = 10000;
+    bn = new BitVec(nbits);
+    bn.randomize(new seedrandom("test123"));
+    mt1 = microtime.now();
+    for (let i = 0; i < iteration; i++) {
+        let from = 0, found = 0;
+        while (true) {
+            if ((found = bn.nextOff(from)) < 0)
+                break;
+            from = found + 1;
+        }
+    }
+    logtime("nextOff search loop 2", mt1, microtime.now(), nbits, iteration);
 
 
     t.pass();
