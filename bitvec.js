@@ -21,8 +21,8 @@ const bitCount          = (word32) => {
     return (((word32 + (word32 >>> 4) & 0xF0F0F0F) * 0x1010101) >>> 24);
 }
 const trailing0s        = (word32) => {
-    const inverse = (word32 ^ (word32 - 1)) >>> 1;      // invert any trailing 0's to 1's, and make the rest as 0's.
-    return bitCount(inverse);
+    const INVERSE = (word32 ^ (word32 - 1)) >>> 1;      // invert any trailing 0's to 1's, and make the rest as 0's.
+    return bitCount(INVERSE);
 }
 
 
@@ -138,6 +138,41 @@ export class BitVec {
         let common = Math.min(this.wordCount, b.wordCount);
         for (let k = common - 1; k >= 0; k--)
             this.words[k] &= ~b.words[k];
+    }
+
+    rshift(bitsToShift) {
+        bitsToShift = bitsToShift % BITS_PER_WORD;              // limit the shifting to 32 bits.
+        const OPENING = BITS_PER_WORD - bitsToShift;            // the bit positions opened up after shifting, to store the previous carry bits.
+        const LOWER_MASK = (1 << bitsToShift) - 1;              // mask to get the lower bits of the word, which are carried into the next word.
+        let carryBits = 0;                                      // the carry bits shifted off from the previous word.
+        for (let k = this.wordCount - 1; k >= 0; k--) {
+            let offBits = this.words[k] & LOWER_MASK;           // the shifted off bits after right shift.
+            this.words[k]  = this.words[k] >>> bitsToShift;
+            this.words[k] |= (carryBits << OPENING);            // put the previous carry bits in the opened bit positions after shifting.
+            carryBits = offBits;                                // the shifted off bits are carried to the next word.
+        }
+        return carryBits;                                       // return any shifted off carry bits.
+    }
+
+    lshift(bitsToShift) {
+        bitsToShift = bitsToShift % BITS_PER_WORD;              // limit the shifting to 32 bits.
+        const OPENING = BITS_PER_WORD - bitsToShift;            // the bit positions opened up after shifting, to store the previous carry bits.
+        const UPPER_MASK = ~((1 << bitsToShift) - 1);           // mask to get the upper bits of the word, which are carried into the next word.
+
+        let shiftedOffBits = 0;
+        for (let i = this.nbits - 1; i >= this.nbits - bitsToShift; i--) {
+            shiftedOffBits = (shiftedOffBits << 1) | this.get(i);
+        }
+
+        let carryBits = 0;                                      // the carry bits shifted off from the previous word.
+        for (let k = 0; k < this.wordCount; k++) {
+            let offBits = this.words[k] & UPPER_MASK;           // the shifted off bits after left shift.
+            this.words[k]  = this.words[k] << bitsToShift;
+            this.words[k] |= (carryBits >>> OPENING);           // put the previous carry bits in the opened bit positions after shifting.
+            carryBits = offBits;                                // the shifted off upper bits are carried to the next word.
+        }
+
+        return shiftedOffBits;                                  // return any shifted off carry bits; move upper bits to the lower positions.
     }
 
     equals(b) {

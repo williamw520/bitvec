@@ -628,6 +628,55 @@ test("andNot", t => {
         t.is(b1.isOn(i), false);
 });
 
+test("rshift", t => {
+    let b1 = new BitVec(100);
+
+    b1.rangeOn(0, 10);
+    t.is(b1.rshift(1), 1);
+    for (let i = 0; i < 9; i++)
+        t.is(b1.isOn(i), true);
+    for (let i = 9; i < 100; i++)
+        t.is(b1.isOn(i), false);
+
+    t.is(b1.rshift(2), 3);
+    for (let i = 0; i < 7; i++)
+        t.is(b1.isOn(i), true);
+    for (let i = 7; i < 100; i++)
+        t.is(b1.isOn(i), false);
+
+    t.is(b1.rshift(6), 64-1);
+    for (let i = 0; i < 1; i++)
+        t.is(b1.isOn(i), true);
+    for (let i = 1; i < 100; i++)
+        t.is(b1.isOn(i), false);
+    
+});
+
+
+test("lshift", t => {
+    let b1 = new BitVec(100);
+
+    b1.rangeOn(90, 99);
+    t.is(b1.lshift(1), 0);
+    for (let i = 0; i < 91; i++)
+        t.is(b1.isOn(i), false);
+    for (let i = 91; i < 100; i++)
+        t.is(b1.isOn(i), true);
+
+    t.is(b1.lshift(2), 3);
+    for (let i = 0; i < 93; i++)
+        t.is(b1.isOn(i), false);
+    for (let i = 93; i < 100; i++)
+        t.is(b1.isOn(i), true);
+
+    t.is(b1.lshift(6), 64-1);
+    for (let i = 0; i < 99; i++)
+        t.is(b1.isOn(i), false);
+    for (let i = 99; i < 100; i++)
+        t.is(b1.isOn(i), true);
+    
+});
+
 test("asHex", t=> {
     let b1 = new BitVec(32);
     t.is(b1.asHex(), "00000000");
