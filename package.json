@@ -1,7 +1,7 @@
 {
     "name": "BitVec",
-    "title": "BitVec",
-    "version": "0.0.1",
+    "title": "BitVec.js",
+    "version": "0.1.0",
     "description": "A high performance JavaScript bit vector class.",
     "keywords": [
         "bits",
@@ -26,7 +26,7 @@
     },
     "private": false,
     "readmeFilename": "README.md",
-    "license": "MIT",
+    "license": "BSD",
     "scripts": {
         "test": "ava"
     },
@@ -36,6 +36,7 @@
         "gulp": "^4.0.2",
         "gulp-rename": "^2.0.0",
         "gulp-uglify-es": "^2.0.0",
+        "gulp-header": "^2.0.9",
         "microtime": "^3.0.0",
         "seedrandom": "^3.0.5"
     },

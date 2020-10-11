@@ -1,6 +1,5 @@
 /*
-  BitVec
-  A high performance JavaScript bit vector class.
+  BitVec.js - A high performance JavaScript bit vector class.
   Copyright (C) 2020 William Wong.  All rights reserved.
   williamw520@gmail.com
 */
