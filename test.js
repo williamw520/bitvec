@@ -1,4 +1,11 @@
 
+
+// Run test with:
+//  npm run test
+//  npm run test -- test.js
+//  npm run test -- -w test.js
+
+
 import test from "ava";
 import seedrandom from "seedrandom";
 import {BitVec} from "./bitvec.js";

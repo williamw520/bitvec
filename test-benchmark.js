@@ -1,3 +1,10 @@
+
+
+// Run test with:
+//  npm run test
+//  npm run test -- test-benchmark.js
+//  npm run test -- -w test-benchmark.js
+
 import test from "ava";
 import microtime from "microtime";
 import seedrandom from "seedrandom";
