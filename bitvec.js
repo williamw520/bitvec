@@ -65,7 +65,7 @@ export class BitVec {
     }
 
     nextOn(fromBitIndex) {
-        if (fromBitIndex >= this.nbits)
+        if (fromBitIndex >= this.nbits || fromBitIndex < 0)
             return -1;
         let widx = wordIdx(fromBitIndex);
         let word = this.words[widx] & (BITMASK32 << fromBitIndex);
@@ -79,13 +79,15 @@ export class BitVec {
     }
 
     nextOff(fromBitIndex) {
-        if (fromBitIndex >= this.nbits)
+        if (fromBitIndex >= this.nbits || fromBitIndex < 0)
             return -1;
         let widx = wordIdx(fromBitIndex);
         let word = (~this.words[widx]) & (BITMASK32 << fromBitIndex);
         while (true) {
-            if (word != 0)
-                return (widx * BITS_PER_WORD) + trailing0s(word);
+            if (word != 0) {
+                let nextOffIndex = (widx * BITS_PER_WORD) + trailing0s(word);
+                return nextOffIndex >= this.nbits ? -1 : nextOffIndex;
+            }
             if (++widx == this.wordCount)
                 return -1;
             word = ~this.words[widx];

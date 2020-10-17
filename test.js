@@ -264,7 +264,14 @@ test("nextOn", t => {
     t.is(b1.nextOn(86), 86);
     t.is(b1.nextOn(87), 87);
     t.is(b1.nextOn(88), 99);
-    
+    t.is(b1.nextOn(100), -1);
+
+    b1.bitOff(99);
+    t.is(b1.nextOn(88), -1);
+    t.is(b1.nextOn(99), -1);
+
+    t.is(b1.nextOn(-1), -1);
+
 });
 
 test("nextOff", t => {
@@ -306,7 +313,13 @@ test("nextOff", t => {
     t.is(b1.nextOff(86), 86);
     t.is(b1.nextOff(87), 87);
     t.is(b1.nextOff(88), 99);
+    t.is(b1.nextOff(100), -1);
+
+    b1.bitOn(99);
+    t.is(b1.nextOff(88), -1);
+    t.is(b1.nextOff(99), -1);
     
+    t.is(b1.nextOff(-1), -1);
 });
 
 test("rangeOn", t => {
@@ -682,24 +695,6 @@ test("lshift", t => {
     for (let i = 99; i < 100; i++)
         t.is(b1.isOn(i), true);
     
-});
-
-test("slice", t => {
-    let b1 = new BitVec(100);
-    let b2;
-
-    b1.rangeOn(90, 99);
-    b2 = b1.slice(0, 7);
-    t.is(b2.nbits, 7);
-    for (let i = 0; i < 7; i++)
-        t.is(b2.isOn(i), false);
-    b2 = b1.slice(60, 100);
-    t.is(b2.nbits, 40);
-    for (let i = 0; i < 90-60; i++)
-        t.is(b2.isOn(i), false);
-    for (let i = 90-60; i < 90-60 + 99-90; i++)
-        t.is(b2.isOn(i), true);
-    t.is(b2.isOn(39), false);
 });
 
 test("slice", t => {
