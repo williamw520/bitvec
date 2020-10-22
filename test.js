@@ -516,6 +516,194 @@ test("rangeFlip", t => {
     for (let i = 0; i < 100; i++)   t.is(b1.isOn(i), true);
 });
 
+test("rangeIsOn", t => {
+    let b1 = new BitVec(100);
+    b1.rangeOn(0, 1);
+    t.is(b1.cardinality(), 1);
+    t.is(b1.rangeIsOn(0, 1), true);
+    t.is(b1.rangeIsOn(0, 2), false);
+
+    b1.rangeOn(0, 32);
+    t.is(b1.cardinality(), 32);
+    for (let i = 0; i < 1; i++)     t.is(b1.rangeIsOn(0, i), false);
+    for (let i = 1; i < 32; i++)    t.is(b1.rangeIsOn(0, i), true);
+    for (let i = 33; i < 100; i++)  t.is(b1.rangeIsOn(32,i), false);
+
+    b1.clear();
+    b1.rangeOn(0, 32);
+    t.is(b1.cardinality(), 32);
+    for (let i = 0; i < 1; i++)     t.is(b1.rangeIsOn(0, i), false);
+    for (let i = 1; i < 32; i++)    t.is(b1.rangeIsOn(0, i), true);
+    for (let i = 33; i < 100; i++)  t.is(b1.rangeIsOn(32,i), false);
+
+    b1.rangeOn(29, 55);
+    t.is(b1.cardinality(), 55);
+    for (let i = 0; i < 1; i++)     t.is(b1.rangeIsOn(0, i), false);
+    for (let i = 1; i < 55; i++)    t.is(b1.rangeIsOn(0, i), true);
+    t.is(b1.rangeIsOn(54, 56), false);
+    for (let i = 55; i < 100; i++)  t.is(b1.rangeIsOn(55,i), false);
+
+    b1.clear();
+    b1.rangeOn(29, 55);
+    t.is(b1.cardinality(), 55-29);
+    for (let i = 0; i < 29; i++)    t.is(b1.rangeIsOn(0, i), false);
+    for (let i = 30; i < 55; i++)   t.is(b1.rangeIsOn(29, i), true);
+    t.is(b1.rangeIsOn(54, 56), false);
+    for (let i = 55; i < 100; i++)  t.is(b1.rangeIsOn(55,i), false);
+
+    b1.clear();
+    b1.rangeOn(29, 29);
+    t.is(b1.cardinality(), 0);
+    for (let i = 0; i < 29; i++)    t.is(b1.rangeIsOn(0, i), false);
+    for (let i = 29; i < 100; i++)  t.is(b1.rangeIsOn(29, i), false);
+
+    b1.clear();
+    b1.rangeOn(99, 100);
+    t.is(b1.cardinality(), 1);
+    for (let i = 0; i < 99; i++)    t.is(b1.rangeIsOn(0, i), false);
+    t.is(b1.rangeIsOn(99, 100), true);
+
+    b1.clear();
+    b1.rangeOn(6, 8);
+    b1.rangeOn(29, 55);
+    b1.rangeOn(90, 100);
+    t.is(b1.cardinality(), (8-6) + (55-29) + (100-90));
+
+    t.is(b1.rangeIsOn(0, 6), false);
+    t.is(b1.rangeIsOn(6, 8), true);
+    t.is(b1.rangeIsOn(8, 29), false);
+    t.is(b1.rangeIsOn(29, 55), true);
+    t.is(b1.rangeIsOn(55, 90), false);
+    t.is(b1.rangeIsOn(90, 100), true);
+
+    b1.clear();
+    b1.rangeOn(0, 100);
+    t.is(b1.cardinality(), 100);
+    for (let i = 0; i < 100; i++)   t.is(b1.isOn(i), true);
+    t.is(b1.rangeIsOn(0, 63), true);
+
+
+    b1 = new BitVec(10);
+    b1.setAll();
+    t.is(b1.rangeIsOn(0, 10), true);
+    
+    b1 = new BitVec(31);
+    b1.setAll();
+    t.is(b1.rangeIsOn(0, 31), true);
+    
+    b1 = new BitVec(32);
+    b1.setAll();
+    t.is(b1.rangeIsOn(0, 32), true);
+    
+    b1 = new BitVec(33);
+    b1.setAll();
+    t.is(b1.rangeIsOn(0, 33), true);
+
+    b1 = new BitVec(64);
+    b1.setAll();
+    t.is(b1.rangeIsOn(0, 64), true);
+
+    for (let i = 1; i < 100; i++) {
+        b1 = new BitVec(i);
+        b1.setAll();
+        t.is(b1.rangeIsOn(0, i), true);
+    }
+
+});
+
+test("rangeIsOff", t => {
+    let b1 = new BitVec(100);
+    b1.setAll();
+    b1.rangeOff(0, 1);
+    t.is(b1.cardinality(), 99);
+    t.is(b1.rangeIsOff(0, 1), true);
+
+    b1.rangeOff(0, 32);
+    t.is(b1.rangeIsOff(0, 32), true);
+    t.is(b1.rangeIsOff(32, 100), false);
+
+    b1.setAll();
+    b1.rangeOff(0, 32);
+    t.is(b1.rangeIsOff(0, 32), true);
+    t.is(b1.rangeIsOff(32, 100), false);
+
+    b1.rangeOff(29, 55);
+    t.is(b1.rangeIsOff(0, 55), true);
+    t.is(b1.rangeIsOff(55, 100), false);
+
+    b1.setAll();
+    b1.rangeOff(29, 55);
+    t.is(b1.rangeIsOff(0, 29), false);
+    t.is(b1.rangeIsOff(29, 55), true);
+    t.is(b1.rangeIsOff(55, 100), false);
+
+    b1.setAll();
+    b1.rangeOff(29, 29);
+    t.is(b1.rangeIsOff(0, 29), false);
+    t.is(b1.rangeIsOff(29, 29), false);
+    t.is(b1.rangeIsOff(29, 100), false);
+
+    b1.setAll();
+    b1.rangeOff(99, 100);
+    t.is(b1.rangeIsOff(0, 99), false);
+    t.is(b1.rangeIsOff(99, 100), true);
+
+    b1.setAll();
+    b1.rangeOff(6, 8);
+    b1.rangeOff(29, 55);
+    b1.rangeOff(90, 100);
+    t.is(b1.rangeIsOff(0, 6), false);
+    t.is(b1.rangeIsOff(6, 8), true);
+    t.is(b1.rangeIsOff(8, 29), false);
+    t.is(b1.rangeIsOff(29, 55), true);
+    t.is(b1.rangeIsOff(55, 90), false);
+    t.is(b1.rangeIsOff(90, 100), true);
+
+    b1.setAll();
+    b1.rangeOff(0, 100);
+    t.is(b1.rangeIsOff(0, 100), true);
+
+
+    b1 = new BitVec(10);
+    b1.clear();
+    t.is(b1.rangeIsOff(0, 10), true);
+    
+    b1 = new BitVec(31);
+    b1.clear();
+    t.is(b1.rangeIsOff(0, 31), true);
+    
+    b1 = new BitVec(32);
+    b1.clear();
+    t.is(b1.rangeIsOff(0, 32), true);
+    
+    b1 = new BitVec(33);
+    b1.clear();
+    t.is(b1.rangeIsOff(0, 33), true);
+
+    b1 = new BitVec(64);
+    b1.clear();
+    t.is(b1.rangeIsOff(0, 64), true);
+
+    for (let i = 1; i < 100; i++) {
+        b1 = new BitVec(i);
+        b1.clear();
+        t.is(b1.rangeIsOff(0, i), true);
+    }
+
+});
+
+test("isAllOn", t => {
+    let b1 = new BitVec(100);
+    b1.setAll();
+    t.is(b1.rangeIsOn(0, 100), true);
+});
+
+test("isAllOff", t => {
+    let b1 = new BitVec(100);
+    b1.clear();
+    t.is(b1.rangeIsOff(0, 100), true);
+});
+
 test("equals", t => {
     let b1 = new BitVec(100);
     let b2 = new BitVec(100);

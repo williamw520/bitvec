@@ -46,6 +46,8 @@ export class BitVec {
     get(bitIndex)       { this._bounded(bitIndex);  return (this.words[ wordIdx(bitIndex) ] >>> bitIndex) & 1   }
     isOn(bitIndex)      { this._bounded(bitIndex);  return this.get(bitIndex) == 1                              }
     isOff(bitIndex)     { this._bounded(bitIndex);  return this.get(bitIndex) == 0                              }
+    isAllOn()           { return this.rangeIsOn(0, this.nbits)                                                  }
+    isAllOff()          { return this.rangeIsOff(0, this.nbits)                                                 }
     cardinality()       { return this.words.reduce( (sum, w) => (sum += bitCount(w), sum), 0 )                  }
     clear()             { this.words.forEach( (_, i) => this.words[i] = 0 )                                     }
     setAll()            { this.words.forEach( (_, i) => this.words[i] = BITMASK32 ); this._trimMsbs();          }
@@ -53,6 +55,17 @@ export class BitVec {
     rangeOn(from, to)   { this._rangeOp(from, to, this._wordOr.bind(this))                                      }
     rangeOff(from, to)  { this._rangeOp(from, to, this._wordAnd.bind(this))                                     }
     rangeFlip(from, to) { this._rangeOp(from, to, this._wordXor.bind(this))                                     }
+
+    rangeIsOn(from, to) {
+        let flag = true;
+        this._rangeOp(from, to, (widx, mask) => { flag = flag && this._wordOn(widx, mask) });
+        return flag && (from < to);
+    }
+    rangeIsOff(from,to) {
+        let flag = true;
+        this._rangeOp(from, to, (i, m) => flag = flag && this._wordOff(i, m));
+        return flag && (from < to);
+    }
 
     slice(fromBitIndex, toBitIndex) {
         fromBitIndex = fromBitIndex || 0;
@@ -216,8 +229,8 @@ export class BitVec {
 
         let firstWidx   = wordIdx(fromBitIndex);
         let lastWidx    = wordIdx(toBitIndex - 1);
-        let firstWMask  = BITMASK32 << fromBitIndex;        // partial bit mask for the first word.
-        let lastWMask   = BITMASK32 >>> -toBitIndex;        // partial bit mask for the last word.
+        let firstWMask  = BITMASK32 << fromBitIndex;        // partial bit mask for the first word from LSB.
+        let lastWMask   = BITMASK32 >>> -toBitIndex;        // partial bit mask for the last word to the MSB.
         if (firstWidx == lastWidx) {
             // same word indices, only one word; process with the first and last word masks combined.
             wordMaskFn(firstWidx, firstWMask & lastWMask);
@@ -295,12 +308,15 @@ export class BitVec {
         return bvec;
     }
 
-    get wordCount()         { return this.words.length                      }
-    _wordBits()             { return this.wordCount * BITS_PER_WORD         }
-    _trimMsbs()             { this.rangeOff(this.nbits, this._wordBits())   }
-    _wordOr(widx, mask)     { this.words[widx] |= mask                      }
-    _wordAnd(widx, mask)    { this.words[widx] &= ~mask                     }
-    _wordXor(widx, mask)    { this.words[widx] ^= mask                      }
+    get size()              { return this.nbits                                         }
+    get wordCount()         { return this.words.length                                  }
+    _wordBits()             { return this.wordCount * BITS_PER_WORD                     }
+    _trimMsbs()             { this.rangeOff(this.nbits, this._wordBits())               }
+    _wordOr(widx, mask)     { this.words[widx] |= mask                                  }
+    _wordAnd(widx, mask)    { this.words[widx] &= ~mask                                 }
+    _wordXor(widx, mask)    { this.words[widx] ^= mask                                  }
+    _wordOn(widx, mask)     { return (this.words[widx] & mask) == (BITMASK32 & mask)    }   // AND BITMASK32 to mask to handle negative number after AND
+    _wordOff(widx, mask)    { return (this.words[widx] & mask) == 0                     }
     _bounded(bitIndex)      { if (bitIndex < 0 || bitIndex >= this.nbits)       throw Error("Bit index is out of bound")    }
     _bounded2(bitIndex)     { if (bitIndex < 0 || bitIndex >  this._wordBits()) throw Error("Bit index is out of bound")    }
 
