@@ -9,12 +9,14 @@ A high performance JavaScript bit vector class.
     * [.BitVec](#module_bitvec.BitVec)
         * [new BitVec(numberOfBits)](#new_module_bitvec.BitVec_new)
         * _instance_
+            * [.size](#module_bitvec.BitVec+size) ⇒ <code>int</code>
+            * [.wordCount](#module_bitvec.BitVec+wordCount) ⇒ <code>int</code>
             * [.clone()](#module_bitvec.BitVec+clone) ⇒ <code>BitVec</code>
             * [.bitOn(bitIndex)](#module_bitvec.BitVec+bitOn)
             * [.bitOff(bitIndex)](#module_bitvec.BitVec+bitOff)
             * [.flip(bitIndex)](#module_bitvec.BitVec+flip)
             * [.set(bitIndex, val)](#module_bitvec.BitVec+set)
-            * [.get(bitIndex)](#module_bitvec.BitVec+get) ⇒ <code>boolean</code>
+            * [.get(bitIndex)](#module_bitvec.BitVec+get) ⇒ <code>int</code>
             * [.isOn(bitIndex)](#module_bitvec.BitVec+isOn) ⇒ <code>boolean</code>
             * [.isOff(bitIndex)](#module_bitvec.BitVec+isOff) ⇒ <code>boolean</code>
             * [.isAllOn()](#module_bitvec.BitVec+isAllOn) ⇒ <code>boolean</code>
@@ -59,12 +61,14 @@ A high performance JavaScript bit vector class.
 * [.BitVec](#module_bitvec.BitVec)
     * [new BitVec(numberOfBits)](#new_module_bitvec.BitVec_new)
     * _instance_
+        * [.size](#module_bitvec.BitVec+size) ⇒ <code>int</code>
+        * [.wordCount](#module_bitvec.BitVec+wordCount) ⇒ <code>int</code>
         * [.clone()](#module_bitvec.BitVec+clone) ⇒ <code>BitVec</code>
         * [.bitOn(bitIndex)](#module_bitvec.BitVec+bitOn)
         * [.bitOff(bitIndex)](#module_bitvec.BitVec+bitOff)
         * [.flip(bitIndex)](#module_bitvec.BitVec+flip)
         * [.set(bitIndex, val)](#module_bitvec.BitVec+set)
-        * [.get(bitIndex)](#module_bitvec.BitVec+get) ⇒ <code>boolean</code>
+        * [.get(bitIndex)](#module_bitvec.BitVec+get) ⇒ <code>int</code>
         * [.isOn(bitIndex)](#module_bitvec.BitVec+isOn) ⇒ <code>boolean</code>
         * [.isOff(bitIndex)](#module_bitvec.BitVec+isOff) ⇒ <code>boolean</code>
         * [.isAllOn()](#module_bitvec.BitVec+isAllOn) ⇒ <code>boolean</code>
@@ -109,6 +113,19 @@ Initialize the bit vector object with the number of bits.
 | --- | --- | --- |
 | numberOfBits | <code>int</code> | set the bit vector with the number of bits. |
 
+<a name="module_bitvec.BitVec+size"></a>
+
+#### bitVec.size ⇒ <code>int</code>
+Return the number of bits in the vector.
+
+**Kind**: instance property of [<code>BitVec</code>](#module_bitvec.BitVec)  
+**Returns**: <code>int</code> - the number of bits  
+<a name="module_bitvec.BitVec+wordCount"></a>
+
+#### bitVec.wordCount ⇒ <code>int</code>
+Return the number of words in the vector.
+
+**Kind**: instance property of [<code>BitVec</code>](#module_bitvec.BitVec)  
 <a name="module_bitvec.BitVec+clone"></a>
 
 #### bitVec.clone() ⇒ <code>BitVec</code>
@@ -158,15 +175,15 @@ Set the bit at the bit index to the value.
 | Param | Type | Description |
 | --- | --- | --- |
 | bitIndex | <code>int</code> | bit index to set the bit value. |
-| val | <code>boolean</code> | the boolean value to set. |
+| val | <code>boolean</code> | the boolean value to set; 1 or 0 is acceptable, too. |
 
 <a name="module_bitvec.BitVec+get"></a>
 
-#### bitVec.get(bitIndex) ⇒ <code>boolean</code>
+#### bitVec.get(bitIndex) ⇒ <code>int</code>
 Get the bit value at the bit index.
 
 **Kind**: instance method of [<code>BitVec</code>](#module_bitvec.BitVec)  
-**Returns**: <code>boolean</code> - the boolean value to set.  
+**Returns**: <code>int</code> - 1 for on, 0 for off.  
 
 | Param | Type | Description |
 | --- | --- | --- |

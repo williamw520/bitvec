@@ -393,6 +393,14 @@ class BitVec {
         }
     }
 
+    /** Return the number of bits in the vector.
+     *  @return {int} the number of bits */
+    get size()              { return this.nbits                                         }
+
+    /** Return the number of words in the vector.
+     *  @return {int} */
+    get wordCount()         { return this.words.length                                  }
+    
     /** Return a string of digits 0 and 1 representing the bit vector.
      *  @return {string} the binary string */
     toString() {
@@ -446,8 +454,6 @@ class BitVec {
         return bvec;
     }
 
-    get size()              { return this.nbits                                         }
-    get wordCount()         { return this.words.length                                  }
     _wordBits()             { return this.wordCount * BITS_PER_WORD                     }
     _trimMsbs()             { this.rangeOff(this.nbits, this._wordBits())               }
     _wordOr(widx, mask)     { this.words[widx] |= mask                                  }
