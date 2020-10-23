@@ -15,7 +15,7 @@ import {BitVec} from "./bitvec.js";
 function logtime(tag, mt1, mt2, nbits, iteration) {
     let elapse = mt2 - mt1;
     let rate = Math.floor( iteration / (elapse || 1) * 1000000 );
-    let msg = (tag + " - ").padEnd(26, " ") +
+    let msg = (tag + " ").padEnd(26, " ") +
         "bits: " + (nbits.toLocaleString() + "; ").padEnd(11, " ") +
         "pass: " + (iteration.toLocaleString() + "; ").padEnd(13, " ") +
         "time: " + elapse.toLocaleString() + "us; " +

@@ -13,6 +13,10 @@
 */
 
 
+//const ENABLE_BOUND_CHECK = true;  // Note: Enabling check causes a branching test that disrupts speculative execution in the CPU.
+const ENABLE_BOUND_CHECK = false;   // The slowdown can be from 20% to 300% for some operations.  Run test-benchmark.js for comparison.
+
+
 // Local defines for word bit info.
 const WORD_ADDRESS_BITS = 5;                            // 32-bit word needs 5 bits for addressing.
 const BITS_PER_WORD     = 1 << WORD_ADDRESS_BITS;       // 32 bits per word
@@ -73,12 +77,12 @@ class BitVec {
 
     /** Set the bit at the bit index to the value.
      *  @param {int} bitIndex - bit index to set the bit value.
-     *  @param {boolean} val - the boolean value to set. */
+     *  @param {boolean} val - the boolean value to set; 1 or 0 is acceptable, too. */
     set(bitIndex, val)  { this._bounded(bitIndex);  val ? this.bitOn(bitIndex) : this.bitOff(bitIndex)          }
 
     /** Get the bit value at the bit index.
      *  @param {int} bitIndex - bit index to get the bit value.
-     *  @return {boolean} the boolean value to set. */
+     *  @return {int} 1 for on, 0 for off. */
     get(bitIndex)       { this._bounded(bitIndex);  return (this.words[ wordIdx(bitIndex) ] >>> bitIndex) & 1   }
     
     /** Check whether the bit is on at the bit index.
@@ -451,8 +455,8 @@ class BitVec {
     _wordXor(widx, mask)    { this.words[widx] ^= mask                                  }
     _wordOn(widx, mask)     { return (this.words[widx] & mask) == (BITMASK32 & mask)    }   // AND BITMASK32 to mask to handle negative number after AND
     _wordOff(widx, mask)    { return (this.words[widx] & mask) == 0                     }
-    _bounded(bitIndex)      { if (bitIndex < 0 || bitIndex >= this.nbits)       throw Error("Bit index is out of bound")    }
-    _bounded2(bitIndex)     { if (bitIndex < 0 || bitIndex >  this._wordBits()) throw Error("Bit index is out of bound")    }
+    _bounded(bitIndex)      { if (ENABLE_BOUND_CHECK && (bitIndex < 0 || bitIndex >= this.nbits))       throw Error("Bit index is out of bound")    }
+    _bounded2(bitIndex)     { if (ENABLE_BOUND_CHECK && (bitIndex < 0 || bitIndex >  this._wordBits())) throw Error("Bit index is out of bound")    }
 
     _ensureCap(nbits) {
         if (this.nbits < nbits)
