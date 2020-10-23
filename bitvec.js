@@ -1,8 +1,17 @@
 /*
-  BitVec.js - A high performance JavaScript bit vector class.
+  BitVec - A high performance JavaScript bit vector class.
   Copyright (C) 2020 William Wong.  All rights reserved.
   williamw520@gmail.com
 */
+
+
+/**
+  BitVec - A high performance JavaScript bit vector class.
+  @module bitvec
+  @author William Wong (williamw520@gmail.com)
+  @description A high performance JavaScript bit vector class.
+*/
+
 
 // Local defines for word bit info.
 const WORD_ADDRESS_BITS = 5;                            // 32-bit word needs 5 bits for addressing.
@@ -25,48 +34,124 @@ const trailing0s        = (word32) => {
 }
 
 
-export class BitVec {
+/**
+ * @class
+ * @classdesc A high performance JavaScript bit vector class.
+ * @memberof module:bitvec
+ */
+class BitVec {
 
-    // Initialize the bit vector object with the number of bits.
+    /** Initialize the bit vector object with the number of bits.
+     *  @param {int} numberOfBits - set the bit vector with the number of bits.
+     *  @constructor
+     */
     constructor(numberOfBits) {
         this.nbits = numberOfBits || BITS_PER_WORD;     // default to 32 bits.
         this.words = new Uint32Array(wordsOfBits(numberOfBits));
     }
 
+    /** Clone a new bit vector object.
+     *  @return {BitVec}
+     */
     clone() {
         let b = new BitVec(this.nbits);
         b.words = this.words.slice();
         return b;
     }
 
+    /** Turn the bit on at the bit index.  
+     *  @param {int} bitIndex - bit index to set the bit. */
     bitOn(bitIndex)     { this._bounded(bitIndex);  this._wordOr( wordIdx(bitIndex), 1 << bitIndex)             }
+    
+    /** Turn the bit off at the bit index.  
+     *  @param {int} bitIndex - bit index to clear the bit. */
     bitOff(bitIndex)    { this._bounded(bitIndex);  this._wordAnd(wordIdx(bitIndex), 1 << bitIndex)             }
+    
+    /** Flip the bit from on to off, or from off to on, at the bit index.  
+     * @param {int} bitIndex - bit index to flip the bit. */
     flip(bitIndex)      { this._bounded(bitIndex);  this._wordXor(wordIdx(bitIndex), 1 << bitIndex)             }
-    set(bitIndex, val)  { this._bounded(bitIndex);  val ? this.bitOn(bitIndex) : this.bitOff(bitIndex)          }
-    get(bitIndex)       { this._bounded(bitIndex);  return (this.words[ wordIdx(bitIndex) ] >>> bitIndex) & 1   }
-    isOn(bitIndex)      { this._bounded(bitIndex);  return this.get(bitIndex) == 1                              }
-    isOff(bitIndex)     { this._bounded(bitIndex);  return this.get(bitIndex) == 0                              }
-    isAllOn()           { return this.rangeIsOn(0, this.nbits)                                                  }
-    isAllOff()          { return this.rangeIsOff(0, this.nbits)                                                 }
-    cardinality()       { return this.words.reduce( (sum, w) => (sum += bitCount(w), sum), 0 )                  }
-    clear()             { this.words.forEach( (_, i) => this.words[i] = 0 )                                     }
-    setAll()            { this.words.forEach( (_, i) => this.words[i] = BITMASK32 ); this._trimMsbs();          }
-    randomize(rng)      { this.words.forEach( (_, i) => this.words[i] = rand32(rng) );  this._trimMsbs();       }
-    rangeOn(from, to)   { this._rangeOp(from, to, this._wordOr.bind(this))                                      }
-    rangeOff(from, to)  { this._rangeOp(from, to, this._wordAnd.bind(this))                                     }
-    rangeFlip(from, to) { this._rangeOp(from, to, this._wordXor.bind(this))                                     }
 
+    /** Set the bit at the bit index to the value.
+     *  @param {int} bitIndex - bit index to set the bit value.
+     *  @param {boolean} val - the boolean value to set. */
+    set(bitIndex, val)  { this._bounded(bitIndex);  val ? this.bitOn(bitIndex) : this.bitOff(bitIndex)          }
+
+    /** Get the bit value at the bit index.
+     *  @param {int} bitIndex - bit index to get the bit value.
+     *  @return {boolean} the boolean value to set. */
+    get(bitIndex)       { this._bounded(bitIndex);  return (this.words[ wordIdx(bitIndex) ] >>> bitIndex) & 1   }
+    
+    /** Check whether the bit is on at the bit index.
+     *  @param {int} bitIndex - bit index to check.
+     *  @return {boolean} true for the bit is on; false for the bit is off. */
+    isOn(bitIndex)      { this._bounded(bitIndex);  return this.get(bitIndex) == 1                              }
+    
+    /** Check whether the bit is off at the bit index.
+     *  @param {int} bitIndex - bit index to check.
+     *  @return {boolean} true for the bit is off; false for the bit is on. */
+    isOff(bitIndex)     { this._bounded(bitIndex);  return this.get(bitIndex) == 0                              }
+    
+    /** Check whether all the bits in the vector are on.
+     *  @return {boolean} true for all the bits are on; false for not all the bits are on. */
+    isAllOn()           { return this.rangeIsOn(0, this.nbits)                                                  }
+    
+    /** Check whether all the bits in the vector are off.
+     *  @return {boolean} true for all the bits are off; false for not all the bits are off. */
+    isAllOff()          { return this.rangeIsOff(0, this.nbits)                                                 }
+    
+    /** Get the number of bits that are on.
+     *  @return {int} the number of ON bits */
+    cardinality()       { return this.words.reduce( (sum, w) => (sum += bitCount(w), sum), 0 )                  }
+
+    /** Clear all the bits to off in the vector. */
+    clear()             { this.words.forEach( (_, i) => this.words[i] = 0 )                                     }
+    
+    /** Set all the bits to on in the vector. */
+    setAll()            { this.words.forEach( (_, i) => this.words[i] = BITMASK32 ); this._trimMsbs();          }
+
+    /** Fill the bit vector with randomly ON or OFF bits.
+     *  @param {function} rng - optional random number generator, default to Math.random if none is provided. */
+    randomize(rng)      { this.words.forEach( (_, i) => this.words[i] = rand32(rng) );  this._trimMsbs();       }
+
+    /** Turn the range of bits to on.
+     *  @param {int} from - the bit index of the beginning of the bit range.
+     *  @param {int} to - the bit index of the end of the bit range (not inclusive). */
+    rangeOn(from, to)   { this._rangeOp(from, to, this._wordOr.bind(this))                                      }
+
+    /** Turn the range of bits to off.
+     *  @param {int} from - the bit index of the beginning of the bit range.
+     *  @param {int} to - the bit index of the end of the bit range (not inclusive). */
+    rangeOff(from, to)  { this._rangeOp(from, to, this._wordAnd.bind(this))                                     }
+    
+    /** Flip the range of bits.
+     *  @param {int} from - the bit index of the beginning of the bit range.
+     *  @param {int} to - the bit index of the end of the bit range (not inclusive). */
+    rangeFlip(from, to) { this._rangeOp(from, to, this._wordXor.bind(this))                                     }
+    
+    /** Check whether the range of bits are all on.
+     *  @param {int} from - the bit index of the beginning of the bit range.
+     *  @param {int} to - the bit index of the end of the bit range (not inclusive).
+     *  @return {boolean} true for all the bits are on; false for not all the bits are on. */
     rangeIsOn(from, to) {
         let flag = true;
         this._rangeOp(from, to, (widx, mask) => { flag = flag && this._wordOn(widx, mask) });
         return flag && (from < to);
     }
+    
+    /** Check whether the range of bits are all off.
+     *  @param {int} from - the bit index of the beginning of the bit range.
+     *  @param {int} to - the bit index of the end of the bit range (not inclusive).
+     *  @return {boolean} true for all the bits are off; false for not all the bits are off. */
     rangeIsOff(from,to) {
         let flag = true;
         this._rangeOp(from, to, (i, m) => flag = flag && this._wordOff(i, m));
         return flag && (from < to);
     }
-
+    
+    /** Take a slice of the bit vector and returns it as a new BitVec.
+     *  @param {int} from - the bit index of the beginning of the bit slice.
+     *  @param {int} to - the bit index of the end of the bit slice (not inclusive).
+     *  @return {BitVec} the new BitVec object containing the bit slice. */
     slice(fromBitIndex, toBitIndex) {
         fromBitIndex = fromBitIndex || 0;
         toBitIndex   = toBitIndex || this.nbits;
@@ -77,6 +162,10 @@ export class BitVec {
         return bv;
     }
 
+    /** Search for the next ON bit, starting from the given bit index.
+     *  @param {int} fromBitIndex - the starting bit index for the next ON bit (inclusive).
+     *  @return {int} the bit index of the found ON bit, -1 if not found.
+     */
     nextOn(fromBitIndex) {
         if (fromBitIndex >= this.nbits || fromBitIndex < 0)
             return -1;
@@ -91,6 +180,10 @@ export class BitVec {
         }
     }
 
+    /** Search for the next OFF bit, starting from the given bit index.
+     *  @param {int} fromBitIndex - the starting bit index for the next OFF bit (inclusive).
+     *  @return {int} the bit index of the found OFF bit, -1 if not found.
+     */
     nextOff(fromBitIndex) {
         if (fromBitIndex >= this.nbits || fromBitIndex < 0)
             return -1;
@@ -107,20 +200,29 @@ export class BitVec {
         }
     }
 
+    /** Iterate bits in the vector starting from the least signifcant bit.
+     *  @param {function} cb - the iterating function for each bit. */
     iterLsb(cb) {
         for (let i = 0; i < this.nbits; i++)
             cb(this.get(i), i);
     }
 
+    /** Iterate bits in the vector starting from the most signifcant bit.
+     *  @param {function} cb - the iterating function for each bit. */
     iterMsb(cb) {
         for (let i = this.nbits - 1; i >= 0; i--)
             cb(this.get(i), i);
     }
 
+    /** Flip all the bits in the vector. */
     not() {
         this.rangeFlip(0, this.nbits);
     }
 
+    /** Apply a bitwise AND operation on the bit vector with the incoming vector.
+     *  The two vectors don't have to have the same number of bits.
+     *  The extra bits will become 0, as a result of the AND operation.
+     *  @param {BitSet} b the incoming bit vector for the operation. */
     and(b) {
         if (this == b)
             return;
@@ -130,6 +232,11 @@ export class BitVec {
             this.words[k] &= b.words[k];                        // and'ing the common prefix bits.
     }
 
+    /** Apply a bitwise OR operation on the bit vector with the incoming vector.
+     *  The two vectors don't have to have the same number of bits.
+     *  The extra bits will become 1, as a result of the OR operation.
+     *  The size of the vector will be expanded if the incoming vector has a larger size.
+     *  @param {BitSet} b the incoming bit vector for the operation. */
     or(b) {
         if (this == b)
             return;
@@ -143,6 +250,11 @@ export class BitVec {
         }
     }
 
+    /** Apply a bitwise XOR operation on the bit vector with the incoming vector.
+     *  The two vectors don't have to have the same number of bits.
+     *  The extra bits will be copied from the incoming vector, as a result of the XOR operation.
+     *  The size of the vector will be expanded if the incoming vector has a larger size.
+     *  @param {BitSet} b the incoming bit vector for the operation. */
     xor(b) {
         if (this == b)
             return;
@@ -156,14 +268,18 @@ export class BitVec {
         }
     }
 
-    // Clears the bits of this bit vector where the corresponding bit is set in the parameter bit vector b.
+    /** Apply a logical (a AND NOT(b)) on the bits in common.
+     *  This effectively clears the bits of the vector where the corresponding bits are set in the incoming bit vector.
+     *  @param {BitSet} b the incoming bit vector for the operation. */
     andNot(b) {
-        // Apply logical (a & !b) on words in common.
         let common = Math.min(this.wordCount, b.wordCount);
         for (let k = common - 1; k >= 0; k--)
             this.words[k] &= ~b.words[k];
     }
 
+    /** Perform a left shift on the bit vector.
+     *  @param {int} bitsToShift the number of bits to shift, limited to 32 bits.
+     *  @return {int} the shifted off carry bits */
     rshift(bitsToShift) {
         bitsToShift = bitsToShift % BITS_PER_WORD;              // limit the shifting to 32 bits.
         const OPENING = BITS_PER_WORD - bitsToShift;            // the bit positions opened up after shifting, to store the previous carry bits.
@@ -178,6 +294,9 @@ export class BitVec {
         return carryBits;                                       // return any shifted off carry bits.
     }
 
+    /** Perform a right shift on the bit vector.
+     *  @param {int} bitsToShift the number of bits to shift, limited to 32 bits.
+     *  @return {int} the shifted off carry bits */
     lshift(bitsToShift) {
         bitsToShift = bitsToShift % BITS_PER_WORD;              // limit the shifting to 32 bits.
         const OPENING = BITS_PER_WORD - bitsToShift;            // the bit positions opened up after shifting, to store the previous carry bits.
@@ -199,6 +318,9 @@ export class BitVec {
         return shiftedOffBits;                                  // return any shifted off carry bits; move upper bits to the lower positions.
     }
 
+    /** Compare the bit vector with another bit vector to see if they are equal.
+     *  @param {BitVec} b the other bit vector to be compared.
+     *  @return {boolean} true if equal, false if not. */
     equals(b) {
         if (this == b)
             return true;
@@ -248,6 +370,8 @@ export class BitVec {
         }
     }
 
+    /** Resize the bit vector, to either expand or shrink the vector.
+     *  @param {int} nbits the number of bits as the new size. */
     resize(nbits) {
         if (this.nbits == nbits) {
             return;
@@ -265,20 +389,28 @@ export class BitVec {
         }
     }
 
+    /** Return a string of digits 0 and 1 representing the bit vector.
+     *  @return {string} the binary string */
     toString() {
         return this.asBinary();
     }
 
+    /** Return a string of digits 0 and 1 representing the bit vector.
+     *  @return {string} the binary string */
     asBinary() {
         let digits = [];
         this.iterMsb( d => digits.push(d) );
         return digits.join("");
     }
 
+    /** Return a hexadecimal string representing the bit vector.
+     *  @return {string} the binary string */
     asHex() {
         return [...this.words].map(w => w.toString(16).padStart(8, "0")).reverse().join("");
     }
 
+    /** Create a BitVec object from the binary digit 0 and 1 string.
+     *  @return {BitVec} the created object */
     static ofBinary(digitsStr) {
         let nbits = digitsStr.length;
         let bvec = new BitVec(nbits);
@@ -288,6 +420,8 @@ export class BitVec {
         return bvec;
     }
 
+    /** Create a BitVec object from the hexadecimal string.
+     *  @return {BitVec} the created object */
     static ofHex(hexStr) {
         let words = [];
         let end = hexStr.length;
@@ -332,4 +466,6 @@ export class BitVec {
     }        
     
 }
+
+export {BitVec};
 
