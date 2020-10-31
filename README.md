@@ -49,7 +49,7 @@ Benchmark is run by:
 
     npm run test -- test-benchmark.js
    
-The result is from running the benchmark on a T460s laptop with i7-6600U @ 2.6GHz.
+The benchmark was run on a T460s laptop with i7-6600U 2.6GHz.
 
 | Functional Area           | # of Bits | Runs        | Time (ms) | Rate (ops/sec) |
 |:--------------------------|:----------|:------------|:----------|:---------------|
