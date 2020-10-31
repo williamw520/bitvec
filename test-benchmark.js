@@ -11,21 +11,43 @@ import seedrandom from "seedrandom";
 import {BitVec} from "./bitvec.js";
 
 
+function logheader() {
+    let msg = 
+        "| Functional Area ".padEnd(28, " ") +
+        "| # of Bits ".padEnd(10, " ") +
+        "| Runs ".padEnd(14, " ") +
+        "| Time (ms) ".padEnd(12, " ") +
+        "| Rate (ops/sec) ".padEnd(17, " ") +
+        "|";
+    console.log(msg);
+    msg = 
+        "|:".padEnd(28, "-") +
+        "|:".padEnd(12, "-") +
+        "|:".padEnd(14, "-") +
+        "|:".padEnd(12, "-") +
+        "|:".padEnd(17, "-") +
+        "|";
+    console.log(msg);
+}
 
 function logtime(tag, mt1, mt2, nbits, iteration) {
-    let elapse = mt2 - mt1;
-    let rate = Math.floor( iteration / (elapse || 1) * 1000000 );
-    let msg = (tag + " ").padEnd(26, " ") +
-        "bits: " + (nbits.toLocaleString() + "; ").padEnd(11, " ") +
-        "pass: " + (iteration.toLocaleString() + "; ").padEnd(13, " ") +
-        "time: " + elapse.toLocaleString() + "us; " +
-        "rate: " + rate.toLocaleString() + " op/sec";
+    let microseconds = mt2 - mt1;
+    let ms = microseconds / 1000;
+    let rate = Math.floor( iteration / (microseconds || 1) * 1000000 );
+    let msg = 
+        "| " + (tag + " ").padEnd(26, " ") +
+        "| " + (nbits.toLocaleString()).padEnd(10, " ") +
+        "| " + (iteration.toLocaleString()).padEnd(12, " ") +
+        "| " + (Math.round(ms).toLocaleString()).padEnd(10, " ") +
+        "| " + (rate.toLocaleString()).padEnd(15, " ") +
+        "|";
     console.log(msg);
 }
 
 test("benchmark", t => {
-    console.log("BitVec benchmark tests, on a million-bit vector.");
-
+    console.log("BitVec benchmark tests\n");
+    logheader();
+    
     let mt1, mt2, iteration, nbits = 1000000;
     let b1 = new BitVec(nbits);     // one million bits
 
