@@ -477,5 +477,8 @@ class BitVec {
     
 }
 
-export {BitVec};
+export {
+    BitVec,
+    ENABLE_BOUND_CHECK,
+};
 

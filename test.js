@@ -8,7 +8,7 @@
 
 import test from "ava";
 import seedrandom from "seedrandom";
-import {BitVec} from "./bitvec.js";
+import {BitVec, ENABLE_BOUND_CHECK} from "./bitvec.js";
 
 
 test("nbits", t => {
@@ -1051,14 +1051,18 @@ test("resize", t => {
 
 
 test("bitOn out of bound", t => {
-    let b1 = new BitVec(32);
-    t.throws( () => { b1.bitOn(32) }, null, "Bit index is out of bound" );
-    t.throws( () => { b1.bitOn(-1) }, null, "Bit index is out of bound" );
-    t.throws( () => { b1.bitOn(39) }, null, "Bit index is out of bound" );
+    if (ENABLE_BOUND_CHECK) {
+        let b1 = new BitVec(32);
+        t.throws( () => { b1.bitOn(32) }, null, "Bit index is out of bound" );
+        t.throws( () => { b1.bitOn(-1) }, null, "Bit index is out of bound" );
+        t.throws( () => { b1.bitOn(39) }, null, "Bit index is out of bound" );
 
-    b1 = new BitVec(100);
-    t.throws( () => { b1.bitOn(100) }, null, "Bit index is out of bound" );
-    t.throws( () => { b1.bitOn(-1)  }, null, "Bit index is out of bound" );
-    t.throws( () => { b1.bitOn(900) }, null, "Bit index is out of bound" );
+        b1 = new BitVec(100);
+        t.throws( () => { b1.bitOn(100) }, null, "Bit index is out of bound" );
+        t.throws( () => { b1.bitOn(-1)  }, null, "Bit index is out of bound" );
+        t.throws( () => { b1.bitOn(900) }, null, "Bit index is out of bound" );
+    } else {
+        t.pass();
+    }
 });
 
