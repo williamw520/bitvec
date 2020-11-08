@@ -18,6 +18,7 @@ function logheader() {
         "| Runs ".padEnd(14, " ") +
         "| Time (ms) ".padEnd(12, " ") +
         "| Rate (ops/sec) ".padEnd(17, " ") +
+        "| nanosec/op ".padEnd(13, " ") +
         "|";
     console.log(msg);
     msg = 
@@ -26,6 +27,7 @@ function logheader() {
         "|:".padEnd(14, "-") +
         "|:".padEnd(12, "-") +
         "|:".padEnd(17, "-") +
+        "|:".padEnd(13, "-") +
         "|";
     console.log(msg);
 }
@@ -34,12 +36,14 @@ function logtime(tag, mt1, mt2, nbits, iteration) {
     let microseconds = mt2 - mt1;
     let ms = microseconds / 1000;
     let rate = Math.floor( iteration / (microseconds || 1) * 1000000 );
+    let unit_time = (microseconds * 1000) / iteration;
     let msg = 
         "| " + (tag + " ").padEnd(26, " ") +
         "| " + (nbits.toLocaleString()).padEnd(10, " ") +
         "| " + (iteration.toLocaleString()).padEnd(12, " ") +
         "| " + (Math.round(ms).toLocaleString()).padEnd(10, " ") +
         "| " + (rate.toLocaleString()).padEnd(15, " ") +
+        "| " + (unit_time.toLocaleString()).padEnd(11, " ") +
         "|";
     console.log(msg);
 }
