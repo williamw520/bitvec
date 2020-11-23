@@ -54,6 +54,7 @@ test("benchmark", t => {
     
     let mt1, mt2, iteration, nbits = 1000000;
     let b1 = new BitVec(nbits);     // one million bits
+    let dummy;
 
     // console.log("number of bits: " + b1.nbits.toLocaleString() + "; number of words: " + b1.wordCount.toLocaleString());
     // console.log("");
@@ -100,6 +101,27 @@ test("benchmark", t => {
     for (let i = 0; i < iteration; i++)
         b1.bitOff(999999);
     logtime("bitOff 999999", mt1, microtime.now(), nbits, iteration);
+
+    
+    mt1 = microtime.now();
+    for (let i = 0; i < iteration; i++)
+        dummy = b1.isOn(0);
+    logtime("isOn 0", mt1, microtime.now(), nbits, iteration);
+
+    mt1 = microtime.now();
+    for (let i = 0; i < iteration; i++)
+        b1.isOn(1);
+    logtime("isOn 1", mt1, microtime.now(), nbits, iteration);
+
+    mt1 = microtime.now();
+    for (let i = 0; i < iteration; i++)
+        b1.isOn(32);
+    logtime("isOn 32", mt1, microtime.now(), nbits, iteration);
+
+    mt1 = microtime.now();
+    for (let i = 0; i < iteration; i++)
+        b1.isOn(999999);
+    logtime("isOn 999999", mt1, microtime.now(), nbits, iteration);
 
     
     mt1 = microtime.now();
